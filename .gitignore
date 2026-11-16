@@ -1,0 +1,41 @@
+# Secrets 
+config/secrets.env 
+*.env 
+!config/secrets.env.example 
+ 
+# Portfolio data 
+data/portfolio.json 
+data/holdings_raw.json 
+data/report_raw.txt 
+uploads/ 
+ 
+# Runtime artifacts 
+state/ 
+logs/ 
+reports/ 
+*.log 
+ 
+# Debug temp files 
+chatid_result.txt 
+socks_test.txt 
+test_probe.txt 
+get_chatid.py 
+*.tmp 
+ 
+# Python 
+__pycache__/ 
+*.py[cod] 
+*.egg-info/ 
+ 
+# IDE 
+.idea/ 
+.vscode/ 
+.DS_Store 
+Thumbs.db 
+ 
+# Virtual envs 
+venv/ 
+.venv/ 
+env/ 
+portfolio.csv 
+portfolio.md 

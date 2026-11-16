@@ -1,0 +1,46 @@
+{
+  "schedule": {
+    "time": "10:15",
+    "timezone": "Europe/Moscow",
+    "weekdays_only": true,
+    "skip_moex_holidays": true
+  },
+  "thresholds": {
+    "preset": "strict",
+    "spike_day_pct": 8,
+    "spike_week_pct": 20,
+    "spike_sigma": 3,
+    "sigma_min_move_pct": 3,
+    "volume_spike_x": 4,
+    "near_52w_high_pct": 3,
+    "bond_price_drop_day_pct": 2,
+    "bond_price_drop_week_pct": 4,
+    "bond_yield_jump_bp": 150,
+    "zspread_jump_bp": 100,
+    "big_drop_day_pct": 6.0,
+    "alert_on_drop": false,
+    "calendar_lookahead_days": 14,
+    "news_lookback_days": 3,
+    "dedup_ttl_days": 21,
+    "drop_note": "Информационный порог падения (не алерт): -6% за день"
+  },
+  "delivery": {
+    "file": true,
+    "telegram": true,
+    "send_if_no_alerts": true,
+    "max_tg_chars": 3800,
+    "attach_top_movers": 3
+  },
+  "sources": {
+    "moex": true,
+    "yahoo": true,
+    "acra": true,
+    "expert_ra": true,
+    "rss": [
+      "https://www.interfax.ru/rss.asp",
+      "https://rssexport.rbc.ru/rbcnews/news/30/full.rss",
+      "https://www.kommersant.ru/RSS/section-business.xml"
+    ]
+  },
+  "notes": "Порог 'strict' выбран пользователем 12.11.2026: +8% за день или +20% за неделю. Проверка один раз утром по будням в 10:15 MSK."
+}

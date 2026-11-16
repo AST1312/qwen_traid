@@ -1,0 +1,10 @@
+[Unit]
+Description=Утренняя проверка портфеля (MOEX + рейтинги + новости)
+After=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/home/user
+ExecStart=/usr/bin/python3 /home/user/scripts/watch.py
+StandardOutput=append:/home/user/logs/systemd.log
+StandardError=append:/home/user/logs/systemd.log

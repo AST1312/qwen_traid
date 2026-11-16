@@ -1,0 +1,10 @@
+[Unit]
+Description=Будни 10:15 MSK — проверка портфеля
+
+[Timer]
+OnCalendar=Mon..Fri 10:15 Europe/Moscow
+Persistent=true
+Unit=portfolio-watch.service
+
+[Install]
+WantedBy=timers.target

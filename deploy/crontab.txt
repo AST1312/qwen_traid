@@ -1,0 +1,8 @@
+# Планировщик через cron (постоянная машина: сервер, VPS, домашний компьютер).
+# Установка: crontab -e  и вставить строки ниже (заменив путь), либо: bash deploy/install_cron.sh
+#
+# CRON_TZ поддерживается современными cron (cronie, Debian cron >= 3.0pl1-137).
+# Если ваш cron его не понимает — уберите строку CRON_TZ и пересчитайте время в TZ сервера.
+
+CRON_TZ=Europe/Moscow
+15 10 * * 1-5 cd /home/user && /usr/bin/python3 scripts/watch.py >> logs/cron.log 2>&1
