@@ -304,36 +304,29 @@ def collect_expected_events(
 ) -> list[dict]:
     """Собрать все ожидаемые события по эмитентам портфеля.
 
-    Возвращает отсортированный список событий:
-    [
-        {
-            "category": "rating_review" | "report_deadline",
-            "issuer": str,
-            "event": str,          # "Пересмотр рейтинга Эксперт РА"
-            "date": date,
-            "days_to": int,
-            "note": str,
-            "source": str,
-            "certainty": "confirmed" | "estimated",  # подтверждено или прогноз
-        },
-        ...
-    ]
+    Горизонты:
+    - Рейтинговые пересмотры: до 400 дней (не реже раза в год, показываем следующий)
+    - Отчётность: horizon_days (по умолчанию 90 дней)
+
+    Возвращает отсортированный список событий.
     """
     result: list[dict] = []
+    # Отдельный, более длинный горизонт для рейтингов (пересмотр ~раз в год)
+    rating_horizon = max(horizon_days, 400)
 
     # --- 1. Прогноз пересмотров рейтингов ---
     last_dates = extract_rating_last_dates(state, positions)
     for issuer, info in last_dates.items():
         next_dt = estimate_next_review(info["last_date"], today, review_interval_days)
         days_to = (next_dt - today).days
-        if 0 <= days_to <= horizon_days:
+        if 0 <= days_to <= rating_horizon:
             result.append({
                 "category": "rating_review",
                 "issuer": issuer,
                 "event": "Пересмотр рейтинга Эксперт РА",
                 "date": next_dt,
                 "days_to": days_to,
-                "note": f"прогноз от последней даты ({info['last_date']:%d.%m.%Y})",
+                "note": f"прогноз от {info['last_date']:%d.%m.%Y}",
                 "source": info["source"],
                 "certainty": "estimated",
                 "last_url": info.get("last_url"),
@@ -386,20 +379,40 @@ def format_event_for_tg(event: dict) -> str:
 
 def build_expected_events_block(
     events: list[dict],
-    max_events: int = 10,
+    max_ratings: int = 5,
+    max_reports: int = 10,
 ) -> str | None:
     """Построить блок «🗓 Ожидаемые события» для Telegram.
+
+    Разделяет рейтинги и отчётность с разной квотой:
+    - Рейтинг пересматривается ~раз в год, показываем до max_ratings
+    - Отчётность чаще, показываем до max_reports
 
     Возвращает строку или None, если событий нет.
     """
     if not events:
         return None
 
-    lines = ["<b>🗓 Ожидаемые события (прогноз):</b>"]
-    for ev in events[:max_events]:
-        lines.append(format_event_for_tg(ev))
+    ratings = [e for e in events if e["category"] == "rating_review"]
+    reports = [e for e in events if e["category"] == "report_deadline"]
 
-    if len(events) > max_events:
-        lines.append(f"<i>…и ещё {len(events) - max_events} событий (см. Markdown-отчёт)</i>")
+    if not ratings and not reports:
+        return None
+
+    lines = ["<b>🗓 Ожидаемые события (прогноз):</b>"]
+
+    if ratings:
+        for ev in ratings[:max_ratings]:
+            lines.append(format_event_for_tg(ev))
+        if len(ratings) > max_ratings:
+            lines.append(f"<i>…и ещё {len(ratings) - max_ratings} пересмотров рейтингов</i>")
+
+    if reports:
+        if ratings:
+            lines.append("")  # пустая строка между секциями
+        for ev in reports[:max_reports]:
+            lines.append(format_event_for_tg(ev))
+        if len(reports) > max_reports:
+            lines.append(f"<i>…и ещё {len(reports) - max_reports} дедлайнов отчётности</i>")
 
     return "\n".join(lines)

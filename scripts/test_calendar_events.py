@@ -47,8 +47,8 @@ for ev in events[:10]:
 
 print()
 print("=== Тест 4: build_expected_events_block (Telegram) ===")
-block = build_expected_events_block(events, max_events=8)
+block = build_expected_events_block(events)
 if block:
     print(block)
 else:
-    print("(блок пустой — событий в горизонте 90 дней нет)")
+    print("(блок пустой — событий в горизонте нет)")

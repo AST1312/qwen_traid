@@ -672,18 +672,32 @@ def build_report(rows: list[dict], alerts: list[dict], news_meta: dict, cfg: dic
 
     # --- 🗓 Ожидаемые события (прогноз пересмотров рейтингов и дедлайнов отчётности) ---
     if expected_events:
-        tg_block = build_expected_events_block(expected_events, max_events=10)
+        tg_block = build_expected_events_block(expected_events)
         if tg_block:
             tg.append(f"\n{tg_block}")
+
+        ratings = [e for e in expected_events if e["category"] == "rating_review"]
+        reports = [e for e in expected_events if e["category"] == "report_deadline"]
+
         md.append("\n## 🗓 Ожидаемые события (прогноз)")
         md.append("_Пересмотры кредитных рейтингов и дедлайны раскрытия отчётности._")
-        for ev in expected_events[:20]:
-            days = ev["days_to"]
-            cert = " ⚠️" if ev.get("certainty") == "estimated" else ""
-            md.append(f"- **{ev['issuer']}**: {ev['event']} — {ev['date']} "
-                      f"(через {days} дн.){cert}")
-        if len(expected_events) > 20:
-            md.append(f"_…и ещё {len(expected_events) - 20} событий_")
+
+        if ratings:
+            md.append("\n### Пересмотры рейтингов")
+            for ev in ratings:
+                days = ev["days_to"]
+                cert = " ⚠️" if ev.get("certainty") == "estimated" else ""
+                md.append(f"- **{ev['issuer']}**: {ev['event']} — {ev['date']} "
+                          f"(через {days} дн.){cert} — {ev.get('note', '')}")
+
+        if reports:
+            md.append("\n### Дедлайны отчётности")
+            for ev in reports[:30]:
+                days = ev["days_to"]
+                md.append(f"- **{ev['issuer']}**: {ev['event']} — {ev['date']} "
+                          f"(через {days} дн.)")
+            if len(reports) > 30:
+                md.append(f"_…и ещё {len(reports) - 30} дедлайнов_")
 
     for title, classes in cls_group.items():
         group = [r for r in rows if r["class"] in classes]
