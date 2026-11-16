@@ -39,3 +39,7 @@ venv/
 env/ 
 portfolio.csv 
 portfolio.md 
+
+# AI context files (local, not committed)
+QWEN.md
+.ai/

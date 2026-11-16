@@ -1,0 +1,234 @@
+{
+  "generated_at": "2026-11-12T10:26:54+03:00",
+  "source_pdf": "broker_report_example.pdf",
+  "report_calc_date": "11.11.2026",
+  "period": [
+    "01.11.2026",
+    "06.11.2026"
+  ],
+  "broker": "Your Broker JSC",
+  "cash": {
+    "RUB": 45000.0,
+    "USD": 120.5,
+    "EUR": 0.0,
+    "CNY": 0.0,
+    "HKD": 0.0
+  },
+  "closed_in_period": [
+    {
+      "name": "LSR Group",
+      "secid": "LSRG",
+      "isin": "RU000A0JPFP0",
+      "depository": "Your Broker JSC",
+      "qty_in": 50,
+      "qty_credit": 0,
+      "qty_debit": 50,
+      "qty": 0
+    }
+  ],
+  "positions": [
+    {
+      "secid": "SBER",
+      "secid_report": "SBER",
+      "isin": "RU0009029540",
+      "name_report": "Sberbank",
+      "name": "Sberbank",
+      "full_name": "Sberbank of Russia",
+      "qty": 200,
+      "class": "share",
+      "place": {
+        "engine": "stock",
+        "market": "shares",
+        "board": "TQBR"
+      },
+      "depository": "Your Broker JSC",
+      "issuer": "Sberbank",
+      "keywords": [
+        "Sberbank",
+        "Sber"
+      ],
+      "keyword_strict": false,
+      "earnings_watch": true,
+      "rating_watch": true,
+      "yahoo": null,
+      "tradable": true,
+      "note": null,
+      "currency": "RUB"
+    },
+    {
+      "secid": "LKOH",
+      "secid_report": "LKOH",
+      "isin": "RU0009024277",
+      "name_report": "Lukoil",
+      "name": "Lukoil",
+      "full_name": "LUKOIL",
+      "qty": 15,
+      "class": "share",
+      "place": {
+        "engine": "stock",
+        "market": "shares",
+        "board": "TQBR"
+      },
+      "depository": "Your Broker JSC",
+      "issuer": "Lukoil",
+      "keywords": [
+        "Lukoil",
+        "LUKOIL"
+      ],
+      "keyword_strict": false,
+      "earnings_watch": true,
+      "rating_watch": true,
+      "yahoo": null,
+      "tradable": true,
+      "note": null,
+      "currency": "RUB"
+    },
+    {
+      "secid": "SU26230RMFS2",
+      "secid_report": "SU26230RMFS2",
+      "isin": "RU000A0JXMA5",
+      "name_report": "OFZ 26230",
+      "name": "OFZ 26230",
+      "full_name": "OFZ-PD 26230",
+      "qty": 25,
+      "class": "ofz",
+      "place": {
+        "engine": "stock",
+        "market": "bonds",
+        "board": "TQOB"
+      },
+      "depository": "Your Broker JSC",
+      "issuer": "OFZ 26230",
+      "keywords": [
+        "OFZ 26230"
+      ],
+      "keyword_strict": true,
+      "earnings_watch": false,
+      "rating_watch": false,
+      "yahoo": null,
+      "tradable": true,
+      "note": null,
+      "currency": "RUB",
+      "face_value": 1000,
+      "face_unit": "SUR",
+      "coupon_value": 38.39,
+      "coupon_percent": 7.7,
+      "coupon_period_days": 182,
+      "next_coupon": "2027-03-16",
+      "maturity": "2039-03-16",
+      "offer_date": null
+    },
+    {
+      "secid": "RU000A1008D7",
+      "secid_report": "RU000A1008D7",
+      "isin": "RU000A1008D7",
+      "name_report": "RZD 001P-19R",
+      "name": "RZD 001P-19R",
+      "full_name": "RZD 001P-19R",
+      "qty": 20,
+      "class": "corp_bond",
+      "place": {
+        "engine": "stock",
+        "market": "bonds",
+        "board": "TQIR"
+      },
+      "depository": "Your Broker JSC",
+      "issuer": "RZD",
+      "keywords": [
+        "RZD",
+        "Russian Railways"
+      ],
+      "keyword_strict": false,
+      "earnings_watch": true,
+      "rating_watch": true,
+      "yahoo": null,
+      "tradable": true,
+      "note": null,
+      "currency": "RUB",
+      "face_value": 1000,
+      "face_unit": "SUR",
+      "coupon_value": 35.2,
+      "coupon_percent": 7.04,
+      "coupon_period_days": 182,
+      "next_coupon": "2027-02-20",
+      "maturity": "2030-02-20",
+      "offer_date": null
+    },
+    {
+      "secid": "TMON",
+      "secid_report": "TMON@",
+      "isin": "RU000A101X50",
+      "name_report": "T-Capital Money Market",
+      "name": "TMON (money market)",
+      "full_name": "T-Capital Money Market Fund",
+      "qty": 5000,
+      "class": "fund_mm",
+      "place": {
+        "engine": "stock",
+        "market": "shares",
+        "board": "TQTF"
+      },
+      "depository": "Your Broker JSC",
+      "issuer": "T-Capital",
+      "keywords": [
+        "T-Capital",
+        "T-Bank"
+      ],
+      "keyword_strict": true,
+      "earnings_watch": false,
+      "rating_watch": false,
+      "yahoo": null,
+      "tradable": true,
+      "note": "Money market fund",
+      "currency": "RUB"
+    },
+    {
+      "secid": "9988",
+      "secid_report": "9988",
+      "isin": "US01609W1027",
+      "name_report": "Alibaba Group Hldg",
+      "name": "Alibaba (9988.HK)",
+      "full_name": "Alibaba Group Holding",
+      "qty": 50,
+      "class": "foreign_share",
+      "place": null,
+      "depository": "Foreign custodian",
+      "issuer": "Alibaba Group",
+      "keywords": [
+        "Alibaba",
+        "BABA"
+      ],
+      "keyword_strict": false,
+      "earnings_watch": true,
+      "rating_watch": false,
+      "yahoo": "9988.HK",
+      "tradable": true,
+      "note": "HKEX",
+      "currency": "HKD"
+    },
+    {
+      "secid": "VIPS-RM",
+      "secid_report": "VIPS-RM",
+      "isin": "US92763W1036",
+      "name_report": "Vipshop ADR",
+      "name": "Vipshop (ADR)",
+      "full_name": "Vipshop Holdings ADR",
+      "qty": 100,
+      "class": "frozen",
+      "place": null,
+      "depository": "Your Broker JSC",
+      "issuer": "Vipshop Holdings",
+      "keywords": [
+        "Vipshop",
+        "VIPS"
+      ],
+      "keyword_strict": false,
+      "earnings_watch": false,
+      "rating_watch": false,
+      "yahoo": "VIPS",
+      "tradable": false,
+      "note": "ADR halted",
+      "currency": "USD"
+    }
+  ]
+}
