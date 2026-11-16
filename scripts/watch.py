@@ -31,6 +31,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from lib import (CONFIG, DATA, REPORTS, STATE, candles, fmt_money, fmt_pct, fx_rub,  # noqa: E402
                  get_json, get_text, iss_block, load_json, load_secrets, log, now_msk,
                  moex_trading_date, save_json, security_info, strip_html, tg_request, yahoo_quote)
+from calendar_events import build_expected_events_block, collect_expected_events  # noqa: E402
 
 SEV_ORDER = {"CRITICAL": 0, "TAKE_PROFIT": 1, "WARNING": 2, "INFO": 3}
 SEV_ICON = {"CRITICAL": "🔴", "TAKE_PROFIT": "🚀", "WARNING": "🟠", "INFO": "🔵"}
@@ -572,7 +573,8 @@ def html_escape(s: str) -> str:
 
 # ---------------------------------------------------------------- отчёты
 def build_report(rows: list[dict], alerts: list[dict], news_meta: dict, cfg: dict,
-                 fx: dict, portfolio: dict, today: str, mode: str) -> tuple[str, str, dict]:
+                 fx: dict, portfolio: dict, today: str, mode: str,
+                 expected_events: list[dict] | None = None) -> tuple[str, str, dict]:
     total = sum(r["value_rub"] for r in rows if r.get("value_rub"))
     cash_rub = sum(v * fx.get(k, 1.0) for k, v in portfolio.get("cash", {}).items())
     prev_total = load_json(STATE / "portfolio_value.json", {}).get("total_rub")
@@ -668,6 +670,21 @@ def build_report(rows: list[dict], alerts: list[dict], news_meta: dict, cfg: dic
             evt_strs = [f"**{e['label']}** {e['date']} (через {e['days']} дн.){e['extra']}" for e in evts]
             md.append(f"- {data['name']}: {'; '.join(evt_strs)}")
 
+    # --- 🗓 Ожидаемые события (прогноз пересмотров рейтингов и дедлайнов отчётности) ---
+    if expected_events:
+        tg_block = build_expected_events_block(expected_events, max_events=10)
+        if tg_block:
+            tg.append(f"\n{tg_block}")
+        md.append("\n## 🗓 Ожидаемые события (прогноз)")
+        md.append("_Пересмотры кредитных рейтингов и дедлайны раскрытия отчётности._")
+        for ev in expected_events[:20]:
+            days = ev["days_to"]
+            cert = " ⚠️" if ev.get("certainty") == "estimated" else ""
+            md.append(f"- **{ev['issuer']}**: {ev['event']} — {ev['date']} "
+                      f"(через {days} дн.){cert}")
+        if len(expected_events) > 20:
+            md.append(f"_…и ещё {len(expected_events) - 20} событий_")
+
     for title, classes in cls_group.items():
         group = [r for r in rows if r["class"] in classes]
         if not group:
@@ -732,6 +749,7 @@ def build_report(rows: list[dict], alerts: list[dict], news_meta: dict, cfg: dic
         "positions": [{k: r.get(k) for k in ("secid", "name", "class", "qty", "status", "value_rub", "metrics", "bond")}
                       for r in rows],
         "news": news_meta,
+        "expected_events": [{**ev, "date": ev["date"].isoformat()} for ev in (expected_events or [])],
     }
     return "\n".join(md), "\n".join(tg), summary
 
@@ -793,6 +811,20 @@ def main() -> int:
 
     news_alerts, relevant, news_meta = scan_news(portfolio, cfg, state)
     alerts = [a for r in rows for a in r.get("alerts", [])] + news_alerts
+
+    # --- 🗓 Ожидаемые события (прогноз пересмотров рейтингов + дедлайны отчётности) ---
+    # Собираем после scan_news, чтобы использовать актуальный state.expert_ra_titles
+    today_date = now_msk().date()
+    try:
+        expected_events = collect_expected_events(
+            portfolio["positions"], state, today_date,
+            horizon_days=cfg["thresholds"].get("calendar_lookahead_days", 30) * 2,
+        )
+        log(f"ожидаемые события: {len(expected_events)} (прогноз пересмотров + отчётность)")
+    except Exception as exc:  # noqa: BLE001 — прогноз не должен ронять основную проверку
+        log(f"ожидаемые события: ошибка прогноза ({type(exc).__name__}: {exc})")
+        expected_events = []
+
     if args.simulate:
         alerts += [
             {"severity": "TAKE_PROFIT", "category": "SPIKE_DAY", "secid": "SBER",
@@ -805,7 +837,8 @@ def main() -> int:
              "text": "[ТЕСТ] Банк Санкт-Петербург: чистая прибыль по МСФО за квартал снизилась на 34% г/г."},
         ]
         mode += " + ТЕСТОВЫЕ АЛЕРТЫ"
-    md, tg, summary = build_report(rows, alerts, news_meta, cfg, fx, portfolio, today, mode)
+    md, tg, summary = build_report(rows, alerts, news_meta, cfg, fx, portfolio, today, mode,
+                                    expected_events=expected_events)
 
     REPORTS.mkdir(exist_ok=True)
     stem = f"{today}_TEST" if args.simulate else f"{today}_morning"
@@ -835,6 +868,11 @@ def main() -> int:
                          "price": (r.get("metrics") or {}).get("price")}
             for r in rows
         }
+        # Сохраняем прогноз ожидаемых событий для истории
+        state["expected_events"] = [
+            {**ev, "date": ev["date"].isoformat()}
+            for ev in expected_events
+        ]
         save_json(STATE / "state.json", state)
         save_json(STATE / "portfolio_value.json", {"date": today, "total_rub": summary["total_rub"]})
 
