@@ -20,6 +20,7 @@
     "big_drop_day_pct": 6.0,
     "alert_on_drop": false,
     "calendar_lookahead_days": 14,
+    "expected_events_lookahead_days": 7,
     "news_lookback_days": 3,
     "dedup_ttl_days": 21,
     "drop_note": "Информационный порог падения (не алерт): -6% за день"

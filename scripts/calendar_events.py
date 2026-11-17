@@ -304,22 +304,19 @@ def collect_expected_events(
 ) -> list[dict]:
     """Собрать все ожидаемые события по эмитентам портфеля.
 
-    Горизонты:
-    - Рейтинговые пересмотры: до 400 дней (не реже раза в год, показываем следующий)
-    - Отчётность: horizon_days (по умолчанию 90 дней)
+    Горизонт: horizon_days (по умолчанию 7 дней) — применяется одинаково
+    к рейтингам и отчётности. События за пределами этого окна не показываются.
 
     Возвращает отсортированный список событий.
     """
     result: list[dict] = []
-    # Отдельный, более длинный горизонт для рейтингов (пересмотр ~раз в год)
-    rating_horizon = max(horizon_days, 400)
 
-    # --- 1. Прогноз пересмотров рейтингов ---
+    # --- 1. Прогноз пересмотров рейтингов (в том же горизонте) ---
     last_dates = extract_rating_last_dates(state, positions)
     for issuer, info in last_dates.items():
         next_dt = estimate_next_review(info["last_date"], today, review_interval_days)
         days_to = (next_dt - today).days
-        if 0 <= days_to <= rating_horizon:
+        if 0 <= days_to <= horizon_days:
             result.append({
                 "category": "rating_review",
                 "issuer": issuer,

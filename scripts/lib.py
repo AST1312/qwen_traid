@@ -251,7 +251,7 @@ def iss_block(payload: dict, block: str) -> list[dict]:
 def resolve_board(secid: str) -> dict | None:
     """Определяем торговую площадку (engine/market/board) по secid."""
     url = f"{ISS}/securities/{secid}.json?iss.meta=off&iss.only=boards&boards.columns=boardid,engine,market,is_traded,is_primary"
-    rows = iss_block(get_json(url), "boards")
+    rows = iss_block(get_json(url, insecure=True), "boards")
     live = [r for r in rows if r.get("is_traded") == 1 and r.get("engine") == "stock"
             and r.get("market") in ("shares", "bonds")]
     if not live:
@@ -264,7 +264,7 @@ def resolve_board(secid: str) -> dict | None:
 def security_info(secid: str, place: dict) -> dict:
     url = (f"{ISS}/engines/{place['engine']}/markets/{place['market']}/boards/{place['board']}"
            f"/securities/{secid}.json?iss.meta=off")
-    payload = get_json(url)
+    payload = get_json(url, insecure=True)
     sec = iss_block(payload, "securities")
     md = iss_block(payload, "marketdata")
     yld = iss_block(payload, "marketdata_yields")
@@ -279,7 +279,7 @@ def candles(secid: str, place: dict, days: int = 400) -> list[dict]:
     url = (f"{ISS}/engines/{place['engine']}/markets/{place['market']}/boards/{place['board']}"
            f"/securities/{secid}/candles.json?from={start}&interval=24&iss.meta=off"
            f"&candles.columns=open,close,high,low,value,volume,end")
-    rows = iss_block(get_json(url), "candles")
+    rows = iss_block(get_json(url, insecure=True), "candles")
     return [r for r in rows if r.get("close")]
 
 
@@ -290,7 +290,7 @@ def fx_rub(currency: str) -> float | None:
     secid = {"USD": "USDRUB_TOM", "EUR": "EURRUB_TOM", "CNY": "CNYRUB_TOM", "HKD": "HKDRUB_TOM"}.get(currency)
     if secid:
         url = f"{ISS}/engines/currency/markets/selt/boards/CETS/securities/{secid}.json?iss.meta=off&marketdata.columns=SECID,LAST,WAPRICE"
-        for row in iss_block(get_json(url), "marketdata"):
+        for row in iss_block(get_json(url, insecure=True), "marketdata"):
             price = row.get("LAST") or row.get("WAPRICE")
             if price:
                 return float(price)
@@ -383,5 +383,5 @@ def moex_trading_date() -> str | None:
     """Текущая торговая дата MOEX. Если не совпадает с сегодня — биржа сегодня не торгует."""
     url = (f"{ISS}/engines/stock/markets/shares/boards/TQBR/securities/SBER.json"
            f"?iss.meta=off&iss.only=dataversion")
-    rows = iss_block(get_json(url, retries=1), "dataversion")
+    rows = iss_block(get_json(url, retries=1, insecure=True), "dataversion")
     return rows[0].get("trade_date") if rows else None

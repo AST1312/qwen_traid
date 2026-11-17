@@ -574,11 +574,13 @@ def html_escape(s: str) -> str:
 # ---------------------------------------------------------------- отчёты
 def build_report(rows: list[dict], alerts: list[dict], news_meta: dict, cfg: dict,
                  fx: dict, portfolio: dict, today: str, mode: str,
-                 expected_events: list[dict] | None = None) -> tuple[str, str, dict]:
+                 expected_events: list[dict] | None = None,
+                 data_quality_ok: bool = True) -> tuple[str, str, dict]:
     total = sum(r["value_rub"] for r in rows if r.get("value_rub"))
     cash_rub = sum(v * fx.get(k, 1.0) for k, v in portfolio.get("cash", {}).items())
     prev_total = load_json(STATE / "portfolio_value.json", {}).get("total_rub")
-    day_abs = total - prev_total if prev_total else None
+    # day_abs показываем только если данные надёжные — иначе «падение» это артефакт сбоя
+    day_abs = (total - prev_total) if (prev_total and data_quality_ok) else None
 
     by_sev: dict[str, list[dict]] = {}
     for a in alerts:
@@ -598,6 +600,15 @@ def build_report(rows: list[dict], alerts: list[dict], news_meta: dict, cfg: dic
               + (f" · изменение к прошлой проверке: {fmt_money(day_abs)}" if day_abs is not None else ""))
     tg.append(f"<b>📋 Портфель · {stamp}</b>")
     tg.append(f"Оценка: <b>{fmt_money(total)}</b>" + (f" ({fmt_money(day_abs)} к прошлой проверке)" if day_abs is not None else ""))
+
+    if not data_quality_ok:
+        valid_count = sum(1 for r in rows if r.get("value_rub") is not None)
+        total_count = len(rows)
+        warn_msg = (f"⚠️ <b>Внимание:</b> получены цены только по {valid_count}/{total_count} позиций. "
+                    f"Оценка может быть неточной. История изменений не обновлена.")
+        tg.append(f"\n{warn_msg}")
+        md.append(f"\n**⚠️ Внимание:** получены цены только по {valid_count}/{total_count} позиций. "
+                  f"Оценка может быть неточной. История изменений не обновлена.")
 
     hot = [a for a in alerts if a["severity"] in ("CRITICAL", "TAKE_PROFIT", "WARNING")]
     if hot:
@@ -823,6 +834,18 @@ def main() -> int:
             f"оценка {fmt_money(row.get('value_rub'))}")
         time.sleep(0.12)
 
+    # --- 🔒 Проверка качества данных ---
+    # Если больше половины позиций не получили цену — данные ненадёжны.
+    # В этом случае НЕ сохраняем state и portfolio_value (чтобы не перезаписать
+    # корректную историю мусором), и показываем предупреждение в отчёте.
+    total_positions = len(portfolio["positions"])
+    valid_rows = [r for r in rows if r.get("value_rub") is not None]
+    valid_count = len(valid_rows)
+    data_quality_ok = valid_count >= max(1, total_positions * 0.5)
+    if not data_quality_ok:
+        log(f"⚠️  Качество данных низкое: цены получены только по {valid_count}/{total_positions} "
+            f"позиций (< 50%). Сохранение state и portfolio_value.json пропущено.")
+
     news_alerts, relevant, news_meta = scan_news(portfolio, cfg, state)
     alerts = [a for r in rows for a in r.get("alerts", [])] + news_alerts
 
@@ -830,11 +853,12 @@ def main() -> int:
     # Собираем после scan_news, чтобы использовать актуальный state.expert_ra_titles
     today_date = now_msk().date()
     try:
+        events_horizon = cfg["thresholds"].get("expected_events_lookahead_days", 7)
         expected_events = collect_expected_events(
             portfolio["positions"], state, today_date,
-            horizon_days=cfg["thresholds"].get("calendar_lookahead_days", 30) * 2,
+            horizon_days=events_horizon,
         )
-        log(f"ожидаемые события: {len(expected_events)} (прогноз пересмотров + отчётность)")
+        log(f"ожидаемые события: {len(expected_events)} (горизонт {events_horizon} дн.)")
     except Exception as exc:  # noqa: BLE001 — прогноз не должен ронять основную проверку
         log(f"ожидаемые события: ошибка прогноза ({type(exc).__name__}: {exc})")
         expected_events = []
@@ -852,7 +876,8 @@ def main() -> int:
         ]
         mode += " + ТЕСТОВЫЕ АЛЕРТЫ"
     md, tg, summary = build_report(rows, alerts, news_meta, cfg, fx, portfolio, today, mode,
-                                    expected_events=expected_events)
+                                    expected_events=expected_events,
+                                    data_quality_ok=data_quality_ok)
 
     REPORTS.mkdir(exist_ok=True)
     stem = f"{today}_TEST" if args.simulate else f"{today}_morning"
@@ -888,7 +913,10 @@ def main() -> int:
             for ev in expected_events
         ]
         save_json(STATE / "state.json", state)
-        save_json(STATE / "portfolio_value.json", {"date": today, "total_rub": summary["total_rub"]})
+        if data_quality_ok:
+            save_json(STATE / "portfolio_value.json", {"date": today, "total_rub": summary["total_rub"]})
+        else:
+            log("⚠️  portfolio_value.json не обновлён (недостоверные данные).")
 
     hot = summary["alerts_count"]
     log(f"=== Готово. Алерты: {hot}. Оценка портфеля: {fmt_money(summary['total_rub'])} ===")
